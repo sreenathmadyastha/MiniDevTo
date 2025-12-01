@@ -1,0 +1,120 @@
+// Program.cs
+// Copy code
+// using FastEndpoints;
+// using FastEndpoints.Security; //add this
+
+// var bld = WebApplication.CreateBuilder();
+// bld.Services
+//    .AddAuthenticationJwtBearer(s => s.SigningKey = "The secret used to sign tokens") //add this
+//    .AddAuthorization() //add this
+//    .AddFastEndpoints();
+
+// var app = bld.Build();
+// app.UseAuthentication() //add this
+//    .UseAuthorization() //add this
+//    .UseFastEndpoints();
+// app.Run();
+
+// # Generating JWT Tokens
+public class UserLoginEndpoint : Endpoint<LoginRequest>
+{
+   public override void Configure()
+   {
+      Post("/api/login");
+      AllowAnonymous();
+   }
+
+   public override async Task HandleAsync(LoginRequest req, CancellationToken ct)
+   {
+      if (await myAuthService.CredentialsAreValid(req.Username, req.Password, ct))
+      {
+         var jwtToken = JwtBearer.CreateToken(
+             o =>
+             {
+                o.SigningKey = "A secret token signing key";
+                o.ExpireAt = DateTime.UtcNow.AddDays(1);
+                o.User.Roles.Add("Manager", "Auditor");
+                o.User.Claims.Add(("UserName", req.Username));
+                o.User["UserId"] = "001"; //indexer based claim setting
+             });
+
+         await Send.OkAsync(
+             new
+             {
+                req.Username,
+                Token = jwtToken
+             });
+      }
+      else
+         ThrowError("The supplied credentials are invalid!");
+   }
+}
+
+//  bld.Services.Configure<JwtCreationOptions>( o =>  o.SigningKey = "..." ); 
+
+
+// Endpoint Authorization
+// Once an authentication middleware is registered such as JWT Bearer, or Cookie as shown above,
+//  access can be restricted to users based on the following:
+
+*****// Policies: ******
+// bld.Services.AddAuthorization(options =>
+// {
+//     options.AddPolicy("ManagersOnly", x => x.RequireRole("Manager").RequireClaim("ManagerID"));
+// })
+
+// UpdateUserEndpoint.cs
+public class UpdateUserEndpoint : Endpoint<UpdateUserRequest>
+{
+   public override void Configure()
+   {
+      Put("/api/users/update");
+      Policies("ManagersOnly");
+   }
+}
+
+// Declarative Security Policies
+// Instead of registering each security policy at startup, you can selectively specify security requirements for each endpoint in the endpoint configuration itself like so:
+
+// RestrictedEndpoint.cs
+public class RestrictedEndpoint : Endpoint<RestrictedRequest>
+{
+   public override void Configure()
+   {
+      Post("/api/restricted");
+      Claims("AdminID", "EmployeeID");
+      Roles("Admin", "Manager");
+      Permissions("UpdateUsersPermission", "DeleteUsersPermission");
+      Policy(x => x.RequireAssertion(...));
+   }
+}
+
+
+**** Claims****
+
+Claims() method
+With this method you are specifying that if a claims principal has ANY of the specified claims, 
+access should be granted. If the requirement is to allow access only if ALL specified claims are present, 
+you can use the ClaimsAll() method.
+
+Permissions() method
+If access should be granted only if the user has ALL the said permissions, use the PermissionsAll() method, 
+otherwise access is granted if ANY of the permissions are present. 
+The Claim Type which this requirement is matched against can be changed like so:
+
+app.UseFastEndpoints(c => c.Security.PermissionsClaimType = "...") //defaults to 'permissions'
+
+// Roles
+// Permissions
+// Scopes
+
+Scopes() method
+To restrict access based on Scopes in tokens (e.g., from OAuth2/OpenID Connect IDPs), 
+specify required scopes using the Scopes() method:
+
+public override void Configure()
+{
+    Get("/item");
+    Scopes("item:read", "item:write");
+}
+

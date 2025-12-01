@@ -10,6 +10,7 @@ public class Request : ArticleModel
 
 public class Validator : Validator<Request>
 {
+    // var id = ObjectId.GenerateNewId().ToString();
     public Validator()
     {
         RuleFor(x => x.ArticleID)

@@ -8,7 +8,7 @@ public class Mapper : Mapper<Request, object, Dom.Article.Comment>
     {
         Content = r.Comment,
         NickName = r.NickName,
-        ID = ObjectId.GenerateNewId().ToString(),
+        CommentID = ObjectId.GenerateNewId().ToString(),
         DateAdded = DateTime.UtcNow
     };
 }

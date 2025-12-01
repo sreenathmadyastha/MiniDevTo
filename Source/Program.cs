@@ -1,5 +1,8 @@
 using MongoDB.Entities;
 using MongoDB.Driver;
+using MongoDB.Bson.Serialization;
+using MongoDB.Bson.Serialization.Serializers;
+using MongoDB.Bson;
 
 var bld = WebApplication.CreateBuilder(new WebApplicationOptions
 {
@@ -23,6 +26,8 @@ var dbName = app.Configuration["DbName"]!;
 var username = app.Configuration["MongoUser"]!;
 var password = app.Configuration["MongoPass"]!;
 var port = Convert.ToInt32(app.Configuration["MongoPort"]!);
+
+
 
 // string host = "localhost";    // your MongoDB host
 // int port = 27017;             // default port

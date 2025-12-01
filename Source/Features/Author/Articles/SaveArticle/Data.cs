@@ -16,26 +16,22 @@ public static class Data
         {
             article.CreatedOn = DateTime.UtcNow;
             await article.SaveAsync();
+            return article.ID;
         }
-        else //update existing article
-        {
-            var res = await DB.Update<Dom.Article>()
-                              .Match(
-                                  a => a.ID == article.ID &&
-                                       a.AuthorID == article.AuthorID)
-                              .ModifyOnly(
-                                  a => new
-                                  {
-                                      a.Title,
-                                      a.Content
-                                  },
-                                  article)
-                              .ExecuteAsync();
+        //update existing article
 
-            if (res?.MatchedCount != 1)
-                return null;
-        }
+        var res = await DB.Update<Dom.Article>()
+                          .Match(
+                              a => a.ID == article.ID)
+                          .ModifyOnly(
+                              a => new
+                              {
+                                  a.Title,
+                                  a.Content
+                              },
+                              article)
+                          .ExecuteAsync();
 
-        return article.ID;
+        return res?.MatchedCount == 1 ? article.ID : null;
     }
 }

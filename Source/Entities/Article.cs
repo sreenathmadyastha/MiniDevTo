@@ -5,7 +5,6 @@ namespace Dom;
 
 public class Article : Entity
 {
-    [BsonId]
     public string AuthorID { get; set; }
     public string AuthorName { get; set; }
     public string Title { get; set; }
@@ -18,7 +17,8 @@ public class Article : Entity
 
     public class Comment
     {
-        [BsonId] public string ID { get; set; }
+        [BsonId]
+        public string CommentID { get; set; }
         public string NickName { get; set; }
         public string Content { get; set; }
         public DateTime DateAdded { get; set; }
